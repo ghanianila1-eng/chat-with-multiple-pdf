@@ -1,8 +1,9 @@
 streamlit
-langchain
-langchain-community
-langchain-core
-langchain-openai
-langchain-text-splitters
-chromadb
+openai
+langchain==0.1.20              # Pin LangChain Core
+langchain-community==0.0.38    # Pin Community package
+langchain-openai==0.1.6        # Pin OpenAI package
+langchain-core==0.1.52         # Pin LangChain Core Abstractions
+chromadb==0.4.24               # Pin Vector Store
+pypdf                          # This one can usually stay unpinned
 tiktoken
