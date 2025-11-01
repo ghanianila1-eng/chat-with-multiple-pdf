@@ -7,3 +7,4 @@ langchain-core==0.1.52         # Pin LangChain Core Abstractions
 chromadb==0.4.24               # Pin Vector Store
 pypdf                          # This one can usually stay unpinned
 tiktoken
+faiss-cpu
