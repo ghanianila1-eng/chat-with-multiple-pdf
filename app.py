@@ -9,13 +9,12 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain.chains import create_history_aware_retriever
 from langchain.memory import ChatMessageHistory
-
+import tempfile
 
 # ---------------------------- CONFIG ----------------------------
 st.set_page_config(page_title="📚 Chat with Multiple PDFs", layout="wide")
 st.title("📚 Professional PDF Chatbot — LangChain + Chroma + GPT-3.5")
 st.markdown("Upload multiple PDFs, build a persistent knowledge base, and chat naturally — conversation history is on the sidebar.")
-
 
 # ---------------------------- SESSION STATE ----------------------------
 if "vectorstore" not in st.session_state:
@@ -24,7 +23,6 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = ChatMessageHistory()
 if "api_key" not in st.session_state:
     st.session_state.api_key = ""
-
 
 # ---------------------------- SIDEBAR ----------------------------
 st.sidebar.header("⚙️ Settings")
@@ -46,8 +44,13 @@ if process_btn:
         st.session_state.chat_history = ChatMessageHistory()
 
         docs = []
-        for pdf in uploaded_files:
-            loader = PyPDFLoader(pdf)
+        for uploaded_file in uploaded_files:
+            # Save uploaded file temporarily
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                tmp_file.write(uploaded_file.read())
+                tmp_path = tmp_file.name
+
+            loader = PyPDFLoader(tmp_path)
             pages = loader.load()
             docs.extend(pages)
 
@@ -59,7 +62,6 @@ if process_btn:
 
         st.sidebar.success("✅ PDFs processed and indexed! You can now chat.")
 
-
 # ---------------------------- MAIN CHAT AREA ----------------------------
 st.divider()
 st.markdown("### 💬 Chat (continuous conversation)")
@@ -70,7 +72,7 @@ if st.session_state.vectorstore is not None and user_query:
     llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
     retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 3})
 
-    # 1️⃣ History-aware retriever (understands context)
+    # 1️⃣ History-aware retriever
     context_prompt = ChatPromptTemplate.from_messages([
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{input}"),
@@ -112,7 +114,6 @@ if st.session_state.vectorstore is not None and user_query:
 
 elif user_query and st.session_state.vectorstore is None:
     st.warning("⚠️ Please upload and process PDFs first.")
-
 
 # ---------------------------- SIDEBAR CHAT HISTORY ----------------------------
 if st.session_state.chat_history.messages:
